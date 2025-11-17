@@ -189,6 +189,7 @@ func TestLocalWithInterfaceGetIP(t *testing.T) {
 				ppfmt.EXPECT().Noticef(pp.EmojiError, "Failed to find any global unicast %s address assigned to interface %s", "IPv4", "lo")
 			},
 			func(t *testing.T) {
+				t.Helper()
 				skipIfInterfaceHasGlobalIP(t, "lo", ipnet.IP4)
 			},
 		},
@@ -199,6 +200,7 @@ func TestLocalWithInterfaceGetIP(t *testing.T) {
 				ppfmt.EXPECT().Noticef(pp.EmojiError, "Failed to find any global unicast %s address assigned to interface %s", "IPv6", "lo")
 			},
 			func(t *testing.T) {
+				t.Helper()
 				skipIfInterfaceHasGlobalIP(t, "lo", ipnet.IP6)
 			},
 		},
