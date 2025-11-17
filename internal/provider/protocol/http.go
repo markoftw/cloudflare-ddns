@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/netip"
 	"strings"
+	"time"
 
 	"github.com/favonia/cloudflare-ddns/internal/ipnet"
 	"github.com/favonia/cloudflare-ddns/internal/pp"
@@ -50,7 +51,14 @@ func (p HTTP) GetIP(ctx context.Context, ppfmt pp.PP, ipNet ipnet.Type) (netip.A
 		return netip.Addr{}, false
 	}
 
-	ip, ok := getIPFromHTTP(ctx, ppfmt, ipNet, url)
+	ctxWithTimeout := ctx
+	var cancel context.CancelFunc
+	if ctxWithTimeout != nil {
+		ctxWithTimeout, cancel = context.WithTimeout(ctxWithTimeout, 10*time.Second)
+		defer cancel()
+	}
+
+	ip, ok := getIPFromHTTP(ctxWithTimeout, ppfmt, ipNet, url)
 	if !ok {
 		return netip.Addr{}, false
 	}
