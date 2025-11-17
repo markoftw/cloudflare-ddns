@@ -64,8 +64,8 @@ jobs:
             type=edge
           annotations: |
             io.artifacthub.package.license=Apache-2.0 WITH LLVM-exception
-            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/favonia/cloudflare-ddns/main/build/SUMMARY.markdown
-            io.artifacthub.package.maintainers=[{"name":"favonia","email":"favonia@email.com"}]
+            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/markoftw/cloudflare-ddns/main/build/SUMMARY.markdown
+            io.artifacthub.package.maintainers=[{"name":"markoftw","email":"markoftw@email.com"}]
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
       - name: 🚀 Build and deploy minimal Docker images
@@ -86,7 +86,7 @@ jobs:
       - name: ✍️ Sign the minimal Docker images
         if: ${{ github.event_name == 'release' }}
         run: |
-          cosign sign --recursive --yes "favonia/cloudflare-ddns@${{ steps.build.outputs.digest }}"
+          cosign sign --recursive --yes "markoftw/cloudflare-ddns@${{ steps.build.outputs.digest }}"
 
       - name: 📝 Calculate metadata for Docker images with alpine
         if: ${{ github.event_name != 'release' }}
@@ -98,8 +98,8 @@ jobs:
             type=edge,suffix=-alpine
           annotations: |
             io.artifacthub.package.license=Apache-2.0 WITH LLVM-exception
-            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/favonia/cloudflare-ddns/main/build/SUMMARY.markdown
-            io.artifacthub.package.maintainers=[{"name":"favonia","email":"favonia@email.com"}]
+            io.artifacthub.package.readme-url=https://raw.githubusercontent.com/markoftw/cloudflare-ddns/main/build/SUMMARY.markdown
+            io.artifacthub.package.maintainers=[{"name":"markoftw","email":"markoftw@email.com"}]
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index
       - name: 🚀 Build and deploy Docker images with alpine
