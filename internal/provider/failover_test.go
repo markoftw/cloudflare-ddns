@@ -1,3 +1,4 @@
+//nolint:testpackage // accessing unexported helper ensures thorough coverage
 package provider
 
 import (
@@ -54,7 +55,7 @@ func TestFailoverProviderFallsBack(t *testing.T) {
 
 	expected := netip.MustParseAddr("2.2.2.2")
 	failover := newFailoverProvider("test",
-		stubProvider{name: "primary", ok: false},
+		stubProvider{name: "primary", ip: netip.Addr{}, ok: false},
 		stubProvider{name: "secondary", ip: expected, ok: true},
 	)
 
@@ -70,8 +71,8 @@ func TestFailoverProviderAllFail(t *testing.T) {
 	ctx := context.Background()
 
 	failover := newFailoverProvider("test",
-		stubProvider{name: "primary", ok: false},
-		stubProvider{name: "secondary", ok: false},
+		stubProvider{name: "primary", ip: netip.Addr{}, ok: false},
+		stubProvider{name: "secondary", ip: netip.Addr{}, ok: false},
 	)
 
 	_, ok := failover.GetIP(ctx, ppfmt, ipnet.IP4)

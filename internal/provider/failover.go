@@ -34,10 +34,12 @@ func newFailoverProvider(providerName string, providers ...Provider) Provider {
 	}
 }
 
+// Name returns the logical name of the failover provider.
 func (f *failoverProvider) Name() string {
 	return f.providerName
 }
 
+// GetIP asks each wrapped provider in order until one succeeds.
 func (f *failoverProvider) GetIP(ctx context.Context, ppfmt pp.PP, ipNet ipnet.Type) (netip.Addr, bool) {
 	if len(f.providers) == 0 {
 		ppfmt.Noticef(pp.EmojiImpossible, "Failover provider %s is misconfigured with zero backends", f.providerName)
@@ -55,7 +57,13 @@ func (f *failoverProvider) GetIP(ctx context.Context, ppfmt pp.PP, ipNet ipnet.T
 
 		if idx < len(f.providers)-1 {
 			next := f.providers[idx+1]
-			ppfmt.Noticef(pp.EmojiWarning, "Provider %s failed to detect %s; trying %s next", Name(p), ipNet.Describe(), Name(next))
+			ppfmt.Noticef(
+				pp.EmojiWarning,
+				"Provider %s failed to detect %s; trying %s next",
+				Name(p),
+				ipNet.Describe(),
+				Name(next),
+			)
 		}
 	}
 

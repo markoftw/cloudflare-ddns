@@ -9,20 +9,11 @@ import (
 
 var fieldIP = regexp.MustCompile(`(?m:^ip=(.*)$)`)
 
-var defaultTraceEndpoints = []struct {
-	name string
-	url  string
-}{
-	{"cloudflare.trace(api)", "https://api.cloudflare.com/cdn-cgi/trace"},
-	{"cloudflare.trace(1.1.1.1)", "https://1.1.1.1/cdn-cgi/trace"},
-	{"cloudflare.trace(1.0.0.1)", "https://1.0.0.1/cdn-cgi/trace"},
-	{"cloudflare.trace(cloudflare.com)", "https://cloudflare.com/cdn-cgi/trace"},
-}
-
 // NewCloudflareTrace creates a CloudflareTrace provider that tries multiple trace endpoints.
 func NewCloudflareTrace() Provider {
-	providers := make([]Provider, 0, len(defaultTraceEndpoints))
-	for _, ep := range defaultTraceEndpoints {
+	endpoints := defaultTraceEndpointSpecs()
+	providers := make([]Provider, 0, len(endpoints))
+	for _, ep := range endpoints {
 		providers = append(providers, newCloudflareTraceRegexp(ep.name, ep.url))
 	}
 	return newFailoverProvider("cloudflare.trace", providers...)
@@ -41,5 +32,19 @@ func newCloudflareTraceRegexp(name, url string) Provider {
 			ipnet.IP4: {url, fieldIP},
 			ipnet.IP6: {url, fieldIP},
 		},
+	}
+}
+
+type traceEndpoint struct {
+	name string
+	url  string
+}
+
+func defaultTraceEndpointSpecs() []traceEndpoint {
+	return []traceEndpoint{
+		{"cloudflare.trace(api)", "https://api.cloudflare.com/cdn-cgi/trace"},
+		{"cloudflare.trace(1.1.1.1)", "https://1.1.1.1/cdn-cgi/trace"},
+		{"cloudflare.trace(1.0.0.1)", "https://1.0.0.1/cdn-cgi/trace"},
+		{"cloudflare.trace(cloudflare.com)", "https://cloudflare.com/cdn-cgi/trace"},
 	}
 }
