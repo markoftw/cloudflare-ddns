@@ -12,10 +12,11 @@ var fieldIP = regexp.MustCompile(`(?m:^ip=(.*)$)`)
 // NewCloudflareTrace creates a CloudflareTrace provider that tries multiple trace endpoints.
 func NewCloudflareTrace() Provider {
 	endpoints := defaultTraceEndpointSpecs()
-	providers := make([]Provider, 0, len(endpoints))
+	providers := make([]Provider, 0, len(endpoints)+1)
 	for _, ep := range endpoints {
 		providers = append(providers, newCloudflareTraceRegexp(ep.name, ep.url))
 	}
+	providers = append(providers, NewIpify())
 	return newFailoverProvider("cloudflare.trace", providers...)
 }
 
