@@ -5,6 +5,7 @@ package protocol_test
 
 import (
 	"context"
+	"io"
 	"net"
 	"net/netip"
 	"testing"
@@ -179,12 +180,16 @@ func TestLocalWithInterfaceGetIP(t *testing.T) {
 		ok            bool
 		expected      netip.Addr
 		prepareMockPP func(*mocks.MockPP)
+		skipIf        func(*testing.T)
 	}{
 		"lo/4": {
 			"lo", ipnet.IP4, false,
 			netip.Addr{},
 			func(ppfmt *mocks.MockPP) {
 				ppfmt.EXPECT().Noticef(pp.EmojiError, "Failed to find any global unicast %s address assigned to interface %s", "IPv4", "lo")
+			},
+			func(t *testing.T) {
+				skipIfInterfaceHasGlobalIP(t, "lo", ipnet.IP4)
 			},
 		},
 		"lo/6": {
@@ -193,6 +198,9 @@ func TestLocalWithInterfaceGetIP(t *testing.T) {
 			func(ppfmt *mocks.MockPP) {
 				ppfmt.EXPECT().Noticef(pp.EmojiError, "Failed to find any global unicast %s address assigned to interface %s", "IPv6", "lo")
 			},
+			func(t *testing.T) {
+				skipIfInterfaceHasGlobalIP(t, "lo", ipnet.IP6)
+			},
 		},
 		"non-existent": {
 			"non-existent-iface", ipnet.IP4, false,
@@ -200,10 +208,15 @@ func TestLocalWithInterfaceGetIP(t *testing.T) {
 			func(ppfmt *mocks.MockPP) {
 				ppfmt.EXPECT().Noticef(pp.EmojiUserError, "Failed to find an interface named %q: %v", "non-existent-iface", gomock.Any())
 			},
+			nil,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
+			if tc.skipIf != nil {
+				tc.skipIf(t)
+			}
 
 			mockCtrl := gomock.NewController(t)
 			mockPP := mocks.NewMockPP(mockCtrl)
@@ -219,5 +232,30 @@ func TestLocalWithInterfaceGetIP(t *testing.T) {
 			require.Equal(t, tc.ok, ok)
 			require.Equal(t, tc.expected, ip)
 		})
+	}
+}
+
+func skipIfInterfaceHasGlobalIP(t *testing.T, ifaceName string, ipNet ipnet.Type) {
+	t.Helper()
+
+	iface, err := net.InterfaceByName(ifaceName)
+	if err != nil {
+		t.Skipf("interface %s not found: %v", ifaceName, err)
+	}
+
+	addrs, err := iface.Addrs()
+	if err != nil {
+		t.Fatalf("failed to list addresses of interface %s: %v", ifaceName, err)
+	}
+
+	ppfmt := pp.New(io.Discard, false, pp.Quiet)
+	for _, addr := range addrs {
+		ip, ok := protocol.ExtractInterfaceAddr(ppfmt, ifaceName, addr)
+		if !ok {
+			continue
+		}
+		if ipNet.Matches(ip) && ip.IsGlobalUnicast() {
+			t.Skipf("interface %s unexpectedly has a global unicast %s address (%s)", ifaceName, ipNet.Describe(), ip.String())
+		}
 	}
 }
